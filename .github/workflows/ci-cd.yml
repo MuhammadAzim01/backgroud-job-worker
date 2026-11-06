@@ -13,13 +13,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: background_jobs
-          POSTGRES_USER: job_user
-          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'background_jobs' }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER || 'job_user' }}
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U job_user -d background_jobs"
+          --health-cmd "pg_isready -U ${POSTGRES_USER:-job_user} -d ${POSTGRES_DB:-background_jobs}"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -34,14 +34,13 @@ jobs:
           --health-retries 10
 
     env:
-      SECRET_KEY: ci-test-secret-key
-      DEBUG: "True"
-      POSTGRES_DB: background_jobs
-      POSTGRES_USER: job_user
-      POSTGRES_PASSWORD: test_password
+      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB || 'background_jobs' }}
+      POSTGRES_USER: ${{ vars.POSTGRES_USER || 'job_user' }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
-      REDIS_URL: redis://localhost:6379/0
+      REDIS_URL: ${{ secrets.REDIS_URL || 'redis://localhost:6379/0' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -78,8 +77,8 @@ jobs:
           echo "$ORACLE_SSH_KEY" > ~/.ssh/id_key
           chmod 600 ~/.ssh/id_key
           tar --exclude='.git' -czf /tmp/app.tar.gz .
-          scp -i ~/.ssh/id_key -o StrictHostKeyChecking=no /tmp/app.tar.gz ${ORACLE_USER:-opc}@${ORACLE_HOST:-84.12.153.173}:~/app.tar.gz
-          ssh -i ~/.ssh/id_key -o StrictHostKeyChecking=no ${ORACLE_USER:-opc}@${ORACLE_HOST:-84.12.153.173} '
+          scp -i ~/.ssh/id_key -o StrictHostKeyChecking=no /tmp/app.tar.gz ${ORACLE_USER}@${ORACLE_HOST}:~/app.tar.gz
+          ssh -i ~/.ssh/id_key -o StrictHostKeyChecking=no ${ORACLE_USER}@${ORACLE_HOST} '
             mkdir -p ~/background &&
             tar -xzf ~/app.tar.gz -C ~/background &&
             rm -f ~/app.tar.gz &&
