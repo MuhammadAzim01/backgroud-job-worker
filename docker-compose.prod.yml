@@ -1,0 +1,53 @@
+x-prod: &prod
+  restart: unless-stopped
+  volumes:
+    - report_data:/data/reports:Z
+
+services:
+  db:
+    restart: unless-stopped
+    command: postgres -c shared_buffers=64MB -c work_mem=4MB -c max_connections=25
+    mem_limit: 160m
+
+  redis:
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 48mb --maxmemory-policy noeviction
+    mem_limit: 64m
+
+  web:
+    <<: *prod
+    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 1 --threads 4 --timeout 60"
+    ports: !reset []
+    expose:
+      - "8000"
+    mem_limit: 180m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    <<: *prod
+    command: celery -A config worker --loglevel=INFO --pool=threads --concurrency=2 --without-gossip --without-mingle
+    mem_limit: 180m
+
+  sweeper:
+    <<: *prod
+    mem_limit: 96m
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro,Z
+      - caddy_data:/data
+    depends_on:
+      - web
+    mem_limit: 48m
+
+volumes:
+  caddy_data:
