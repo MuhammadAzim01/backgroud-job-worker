@@ -8,9 +8,9 @@ def env_bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "local-dev-key-not-for-production")
+SECRET_KEY = os.getenv("SECRET_KEY") or "local-dev-key-not-for-production"
 DEBUG = env_bool("DEBUG", False)
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in (os.getenv("ALLOWED_HOSTS") or "localhost,127.0.0.1").split(",") if h.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -55,11 +55,11 @@ if os.getenv("POSTGRES_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "background_jobs"),
-            "USER": os.getenv("POSTGRES_USER", "job_user"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+            "NAME": os.getenv("POSTGRES_DB") or "background_jobs",
+            "USER": os.getenv("POSTGRES_USER") or "job_user",
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD") or "",
             "HOST": os.environ["POSTGRES_HOST"],
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            "PORT": os.getenv("POSTGRES_PORT") or "5432",
             "CONN_MAX_AGE": 60,
         }
     }
@@ -99,7 +99,7 @@ EMAIL_FAILURE_RATE = float(os.getenv("EMAIL_FAILURE_RATE", "0"))
 EMAIL_SIMULATED_DELAY = float(os.getenv("EMAIL_SIMULATED_DELAY", "0.2"))
 REPORT_OUTPUT_DIR = os.getenv("REPORT_OUTPUT_DIR", str(BASE_DIR / "reports"))
 
-CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+CELERY_BROKER_URL = os.getenv("REDIS_URL") or "redis://redis:6379/0"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_IGNORE_RESULT = True
