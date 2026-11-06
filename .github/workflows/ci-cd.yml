@@ -65,6 +65,8 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Deploy to Oracle Cloud VM
         if: env.ORACLE_SSH_KEY != ''
         env:
@@ -75,8 +77,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "$ORACLE_SSH_KEY" > ~/.ssh/id_key
           chmod 600 ~/.ssh/id_key
+          tar --exclude='.git' -czf /tmp/app.tar.gz .
+          scp -i ~/.ssh/id_key -o StrictHostKeyChecking=no /tmp/app.tar.gz ${ORACLE_USER:-opc}@${ORACLE_HOST:-84.12.153.173}:~/app.tar.gz
           ssh -i ~/.ssh/id_key -o StrictHostKeyChecking=no ${ORACLE_USER:-opc}@${ORACLE_HOST:-84.12.153.173} '
+            mkdir -p ~/background &&
+            tar -xzf ~/app.tar.gz -C ~/background &&
+            rm -f ~/app.tar.gz &&
             cd ~/background &&
-            git pull origin main &&
             sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
           '
