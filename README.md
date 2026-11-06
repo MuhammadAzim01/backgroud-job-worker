@@ -8,9 +8,10 @@ It supports asynchronous job submission, background execution, lifecycle status 
 
 ## Live Deployment
 
-- **Base URL**: `http://84.12.153.173/api/v1`
-- **Health Endpoint**: `http://84.12.153.173/api/v1/health/`
-- **Jobs Endpoint**: `http://84.12.153.173/api/v1/jobs/`
+- **HTTPS Domain Base URL**: `https://84.12.153.173.sslip.io/api/v1`
+- **HTTP IP Base URL**: `http://84.12.153.173/api/v1`
+- **Health Endpoint**: `https://84.12.153.173.sslip.io/api/v1/health/`
+- **Jobs Endpoint**: `https://84.12.153.173.sslip.io/api/v1/jobs/`
 
 ---
 
